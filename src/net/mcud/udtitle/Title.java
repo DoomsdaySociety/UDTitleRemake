@@ -1,0 +1,389 @@
+package net.mcud.udtitle;
+
+import net.mcud.udtitle.listener.PlayerEvent;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import net.mcud.udtitle.command.TGui;
+import net.milkbowl.vault.chat.Chat;
+import net.milkbowl.vault.economy.Economy;
+import net.milkbowl.vault.permission.Permission;
+
+import org.bukkit.Bukkit;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.RegisteredServiceProvider;
+import org.bukkit.plugin.java.JavaPlugin;
+
+@SuppressWarnings("deprecation")
+public class Title extends JavaPlugin {
+    // @Deprecation
+	// public List<Integer> LTI;
+    // @Deprecation
+    // public List<String> LTS;
+    
+    public Map<Integer, String> titleMap;
+    
+    public int storageType;
+    public FileConfiguration pluginConfig;
+    public Chat chatApi = null;
+    public String cmd;
+    public double cost;
+    public Economy econApi = null;
+    public File configFile;
+    public String listGuiTitle;
+    public String titleGuiTitle;
+    public Permission permsApi = null;
+    public boolean isUseCommand;
+    public boolean isUseGui;
+    public int defaultTitleId = 1001;
+    // 未使用
+    // public LanguageManager DLM;
+    public LanguageManager msgManager;
+    public PlayerData data;
+	public net.mcud.udtitle.Placeholder papiExpansion;
+    public TGui commands;
+    public PlayerEvent playerEvents;
+    public GuiTitle guiTitle;
+    public ListGui guiList;
+    
+    public void loadDefaultMsg() {
+    	InputStream is = getResource("Msg.yml");
+    	if(is != null) {
+        	pluginConfig = YamlConfiguration.loadConfiguration(new InputStreamReader(is));
+        	this.msgManager.config = pluginConfig;
+    	}
+    	else {
+    		this.getLogger().info("找不到插件内置语言文件，请检查插件是否完整");
+    	}
+    }
+
+    public void reload() {
+        this.saveResource("Msg.yml", false);
+        if (this.msgManager == null) {
+            this.msgManager = new LanguageManager(this);
+        }
+        if (!this.msgManager.loadMsg(new File(this.getDataFolder(), "Msg.yml"))) {
+            loadDefaultMsg();
+        }
+        this.configFile = new File(this.getDataFolder(), "config.yml");
+        if (configFile.exists()) {
+            pluginConfig = YamlConfiguration.loadConfiguration(configFile);
+        } else {
+            saveDefaultConfig();
+            configFile = new File(this.getDataFolder(), "config.yml");
+            pluginConfig = YamlConfiguration.loadConfiguration(configFile);
+        }
+        if (pluginConfig == null) {
+            info(this.msgManager.getMsg(Lang.LoadFail));
+        }
+        GuiTitle.prevPage = packId(-233) + this.msgManager.getMsg(Lang.LastPage);
+        GuiTitle.nextPage = packId(-233) + this.msgManager.getMsg(Lang.NextPage);
+        GuiTitle.cancelTag = packId(-233) + this.msgManager.getMsg(Lang.CancelTitle);
+        ListGui.prevPage = packId(-233) + this.msgManager.getMsg(Lang.LastPage);
+        ListGui.nextPage = packId(-233) + this.msgManager.getMsg(Lang.NextPage);
+        titleGuiTitle = pluginConfig.getString("title");
+        if ((titleGuiTitle == null) || (titleGuiTitle.length() < 1)) {
+            titleGuiTitle = "&b称号列表";
+            pluginConfig.set("title", titleGuiTitle);
+        }
+        titleGuiTitle = titleGuiTitle.replace("&", "§");
+        listGuiTitle = pluginConfig.getString("listtitle");
+        this.defaultTitleId = pluginConfig.getInt("defaultTitleId");
+        if (listGuiTitle == null || listGuiTitle.length() < 1) {
+            listGuiTitle = "&a所有称号展示";
+            pluginConfig.set("listtitle", listGuiTitle);
+        }
+        listGuiTitle = listGuiTitle.replace("&", "§");
+        isUseCommand = pluginConfig.getBoolean("usecommand");
+        cmd = pluginConfig.getString("cmd");
+        storageType = pluginConfig.getInt("StorageType");
+        cost = pluginConfig.getDouble("cost");
+        isUseGui = pluginConfig.getBoolean("usegui");
+        this.loadTitle();
+        this.data.loadConfiguration();
+    }
+
+    public GuiTitle getGuiTitle() {
+    	return guiTitle;
+    }
+    public ListGui getGuiList() {
+    	return guiList;
+    }
+    
+    public void onEnable() {
+    	commands = new TGui(this);
+    	playerEvents = new PlayerEvent(this);
+    	guiTitle = new GuiTitle(this);
+    	guiList = new ListGui(this);
+        this.getCommand("tgui").setExecutor(commands);
+        this.getServer().getPluginManager().registerEvents(playerEvents, this);
+	    if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+	    	this.installPlaceholderHook();
+	    }
+        this.data = new PlayerData(this);
+        reload();
+        if (!setupChat() || !setupPermissions() || !setupEconomy()) {
+            info("获取聊天,经济,权限管理失败,请检查是否安装了Vault,聊天,经济,权限插件");
+            Bukkit.getServer().getPluginManager().disablePlugin(this);
+        }
+        info("UDtitle 已开启");
+    }
+
+    public void installPlaceholderHook() {
+    	this.papiExpansion = new Placeholder(this);
+        
+        if (this.papiExpansion.register()) {
+            this.getLogger().info("PlaceholderAPI successfully hooked");
+        }
+        else {
+            this.getLogger().info("PlaceholderAPI unsuccessfully hooked");
+        }
+    }
+    
+    public void onDisable() {
+        info("UDtitle 已关闭");
+    }
+
+    private boolean setupEconomy() {
+        if (getServer().getPluginManager().getPlugin("Vault") == null) {
+            return false;
+        }
+        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+        if (rsp == null) {
+            return false;
+        }
+        econApi = (Economy) rsp.getProvider();
+        return econApi != null;
+    }
+
+    private boolean setupChat() {
+        chatApi = (Chat) getServer().getServicesManager().getRegistration(Chat.class).getProvider();
+        return chatApi != null;
+    }
+
+    private boolean setupPermissions() {
+        permsApi = (Permission) getServer().getServicesManager().getRegistration(Permission.class).getProvider();
+        return permsApi != null;
+    }
+
+    public void info(String str) {
+        getLogger().info(str);
+    }
+
+    public List<String> getPlayerAllTitle(String player) {
+        List<String> listTitle = new ArrayList<String>();
+    	for (Integer titleId : titleMap.keySet()) {
+            if (hasTitle(player, titleId)) {
+                listTitle.add(titleMap.get(titleId));
+            }
+        }
+        return listTitle;
+    }
+
+    public Boolean isTitleExist(int id) {
+        return Boolean.valueOf(this.titleMap.keySet().contains(id));
+    }
+
+    public List<Integer> GetPlayerAllTitleID(String Player) {
+        List<Integer> listId = new ArrayList<Integer>();
+        for (Integer titleId : titleMap.keySet()) {
+            if (hasTitle(Player, titleId)) {
+                listId.add(titleId);
+            }
+        }
+        return listId;
+    }
+
+    public List<Integer> GetAllTitleID() {
+        List<Integer> L = new ArrayList<>();
+        Set<String> S = pluginConfig.getConfigurationSection("titles").getKeys(false);
+        if (!S.isEmpty()) {
+            for (String str : S) {
+                L.add(Integer.valueOf(str));
+            }
+        }
+        return L;
+    }
+
+    public String GetTitleForTitltID(int id) {
+        if(titleMap.keySet().contains(id)) {
+        	return titleMap.get(id);
+        }
+        return "";
+    }
+
+    public List<String> GetLore(int ID) {
+        List<String> L = pluginConfig.getStringList("lore." + ID);
+        for (int i = 0; i < L.size(); i++) {
+            L.set(i, L.get(i).replace("&", "§"));
+        }
+        return L;
+    }
+
+    public String GetTitleItemID(int ID) {
+        return pluginConfig.getString("itemid." + ID + ".Material");
+    }
+
+    public int GetTitleItemDataID(int ID) {
+        return pluginConfig.getInt("itemid." + ID + ".Data");
+    }
+
+    public List<String> GetAllTitle() {
+        List<Integer> L = GetAllTitleID();
+        List<String> S = new ArrayList<>();
+        for (Integer I : L) {
+            S.add(String.valueOf(packId(I.intValue())) + "§r" + pluginConfig.getString("titles." + String.valueOf(I)).replace("&", "§"));
+        }
+        return S;
+    }
+
+    public void loadTitle() {
+        ConfigurationSection cs = pluginConfig.getConfigurationSection("titles");
+        for(String id : cs.getKeys(false)) {
+        	try {
+        		Integer intId = Integer.valueOf(id);
+        		String tag = cs.getString(id);
+        		titleMap.put(intId, tag);
+        	}catch(Throwable t){
+        		this.info("载入称号(id=" + id + ")时出现异常: " + t.getLocalizedMessage());
+        		continue;
+        	}
+        }
+    	
+    }
+
+    public boolean addPlayerTitle(String Player, int ID) {
+        if (storageType != 0) {
+            return permsApi.playerAdd((String) null, Player, "udtitle.t." + String.valueOf(ID));
+        }
+        List<Integer> L = pluginConfig.getIntegerList("players." + Player.toLowerCase());
+        if (!L.contains(Integer.valueOf(ID)) && isTitleExist(ID).booleanValue()) {
+            L.add(Integer.valueOf(ID));
+            pluginConfig.set("players." + Player.toLowerCase(), L);
+        }
+        try {
+            pluginConfig.save(configFile);
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean removePlayerTitle(String Player, int ID) {
+        if (storageType != 0) {
+            return permsApi.playerRemove((String) null, Player, "udtitle.t." + String.valueOf(ID));
+        }
+        List<Integer> L = pluginConfig.getIntegerList("players." + Player);
+        for (int i = 0; i < L.size(); i++) {
+            if (L.get(i).intValue() == ID) {
+                L.remove(i);
+                return true;
+            }
+        }
+        pluginConfig.set("players." + Player, L);
+        try {
+            pluginConfig.save(configFile);
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public List<String> DefaultLore() {
+        List<String> L = new ArrayList<>();
+        L.add("§bO(∩_∩)O");
+        L.add("§aQwQ");
+        return L;
+    }
+
+    public String packId(int i) {
+        StringBuilder result = new StringBuilder();
+        for (char c2 : String.valueOf(i).toCharArray()) {
+            result.append("§").append(c2);
+        }
+        return result.toString();
+    }
+
+    public int extractId(String s) {
+        int resetIndex = s.indexOf("§r");
+        if (resetIndex <= 0) {
+            return -1;
+        }
+        String codes = s.substring(0, resetIndex);
+        int id = 0;
+        for (int i = 1; i < codes.length(); i += 2) {
+            id = (id * 10) + (codes.charAt(i) - '0');
+        }
+        return id;
+    }
+
+    public boolean hasTitle(String Player, int ID) {
+        if (storageType != 0) {
+            return permsApi.has("", Player, "udtitle.t." + String.valueOf(ID));
+        }
+        if (!permsApi.has("", Player, "udtitle.t.*") && !pluginConfig.getIntegerList("players." + Player.toLowerCase()).contains(Integer.valueOf(ID))) {
+            return false;
+        }
+        return true;
+    }
+
+    public void setPlayerTitle(Player Player, String Prefix) {
+        setPlayerTitle(Player.getName(), Prefix);
+    }
+
+    public boolean setPlayerTitle(String Player, String Prefix) {
+        data.setPlayerTag(Player,Prefix);
+        if (isUseCommand) {
+            return Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd.replace("%player%", Player).replace("%prefix%", Prefix).replace("§", "&"));
+        }
+        return true;
+    }
+
+    public boolean setPlayerTitle(Player Player, int ID) {
+        return setPlayerTitle(Player.getName(), ID);
+    }
+
+	public boolean setPlayerTitleUseMoney(Player Player, int ID) {
+        if (econApi.getBalance(Player.getName()) < cost || !takeMoney(Player.getName(), cost)) {
+            return false;
+        }
+        if (setPlayerTitle(Player, ID)) {
+            return true;
+        }
+        econApi.depositPlayer(Player.getName(), cost);
+        Player.sendMessage(msgManager.getMsg(Lang.NotEnoughMoney));
+        return false;
+    }
+
+    public boolean takeMoney(String Player, double db) {
+        return econApi.withdrawPlayer(Player, db).transactionSuccess();
+    }
+
+    public boolean setPlayerTitle(String player, int id) {
+        for (Integer titleId : titleMap.keySet()) {
+            if (titleId == id) {
+                return setPlayerTitle(player, titleMap.get(titleId));
+            }
+        }
+        return false;
+    }
+
+    public void setDefaultPrefix(Player player) {
+        String[] g = chatApi.getPlayerGroups(player);
+        if (g == null || g.length < 1) {
+            chatApi.setPlayerPrefix(player, "§f[NotFoundGroup]");
+        } else {
+            setPlayerTitle(player, chatApi.getGroupPrefix((String) null, g[g.length - 1]));
+        }
+    }
+}

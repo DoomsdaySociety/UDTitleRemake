@@ -1,0 +1,9 @@
+name: UDtitleRemake
+main: net.mcud.udtitle.Title
+version: 2.0
+description: Reset version of the UDTitle that like shit.
+author: LazyCat
+commands:
+  tgui:
+    description: UDtitle
+    usage: /tgui
