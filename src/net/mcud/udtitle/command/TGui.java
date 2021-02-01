@@ -22,11 +22,18 @@ public class TGui implements CommandExecutor {
             p = (Player) arg0;
         }
         if (s.length == 0) {
-            arg0.sendMessage(plugin.msgManager.getMsg(Lang.help1));
-            arg0.sendMessage(plugin.msgManager.getMsg(Lang.help2));
-            arg0.sendMessage(plugin.msgManager.getMsg(Lang.help3));
+            if (!plugin.isUseGui) {
+                arg0.sendMessage(plugin.msgManager.getMsg(Lang.CanNotOpenGui));
+                return true;
+            }
+            plugin.getGuiTitle().open(p, 1);
         } else if (s.length == 1) {
-            if (s[0].equalsIgnoreCase("open")) {
+        	if(s[0].equalsIgnoreCase("help")) {
+                arg0.sendMessage(plugin.msgManager.getMsg(Lang.help1));
+                arg0.sendMessage(plugin.msgManager.getMsg(Lang.help2));
+                arg0.sendMessage(plugin.msgManager.getMsg(Lang.help3));
+        	}
+        	else if (s[0].equalsIgnoreCase("open")) {
                 if (!plugin.isUseGui) {
                     arg0.sendMessage(plugin.msgManager.getMsg(Lang.CanNotOpenGui));
                     return true;
@@ -49,7 +56,7 @@ public class TGui implements CommandExecutor {
             }
         } else if (s.length == 2) {
             if (s[0].equalsIgnoreCase("list")) {
-                List<Integer> I = plugin.GetPlayerAllTitleID(s[1]);
+                List<Integer> I = plugin.getPlayerAllTitleID(s[1]);
                 List<String> LS = plugin.getPlayerAllTitle(s[1]);
                 arg0.sendMessage("§2--------§b[§6" + s[1] + "的称号" + "§b]§2-------");
                 for (int o = 0; o < I.size(); o++) {

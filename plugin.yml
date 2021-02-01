@@ -1,6 +1,7 @@
 name: UDtitleRemake
 main: net.mcud.udtitle.Title
 version: 2.0
+api-version: 1.13
 description: Reset version of the UDTitle that like shit.
 author: LazyCat
 commands:

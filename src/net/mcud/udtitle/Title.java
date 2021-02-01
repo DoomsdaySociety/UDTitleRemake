@@ -6,15 +6,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.mcud.udtitle.command.TGui;
-import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.permission.Permission;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -33,7 +34,6 @@ public class Title extends JavaPlugin {
     
     public int storageType;
     public FileConfiguration pluginConfig;
-    public Chat chatApi = null;
     public String cmd;
     public double cost;
     public Economy econApi = null;
@@ -130,11 +130,11 @@ public class Title extends JavaPlugin {
 	    }
         this.data = new PlayerData(this);
         reload();
-        if (!setupChat() || !setupPermissions() || !setupEconomy()) {
-            info("获取聊天,经济,权限管理失败,请检查是否安装了Vault,聊天,经济,权限插件");
+        if (!setupPermissions() || !setupEconomy()) {
+            info("获取经济,权限管理失败,请检查是否安装了Vault,经济,权限插件");
             Bukkit.getServer().getPluginManager().disablePlugin(this);
         }
-        info("UDtitle 已开启");
+        else info("UDtitle 已开启");
     }
 
     public void installPlaceholderHook() {
@@ -164,11 +164,6 @@ public class Title extends JavaPlugin {
         return econApi != null;
     }
 
-    private boolean setupChat() {
-        chatApi = (Chat) getServer().getServicesManager().getRegistration(Chat.class).getProvider();
-        return chatApi != null;
-    }
-
     private boolean setupPermissions() {
         permsApi = (Permission) getServer().getServicesManager().getRegistration(Permission.class).getProvider();
         return permsApi != null;
@@ -192,17 +187,17 @@ public class Title extends JavaPlugin {
         return Boolean.valueOf(this.titleMap.keySet().contains(id));
     }
 
-    public List<Integer> GetPlayerAllTitleID(String Player) {
+    public List<Integer> getPlayerAllTitleID(String player) {
         List<Integer> listId = new ArrayList<Integer>();
         for (Integer titleId : titleMap.keySet()) {
-            if (hasTitle(Player, titleId)) {
+            if (hasTitle(player, titleId)) {
                 listId.add(titleId);
             }
         }
         return listId;
     }
 
-    public List<Integer> GetAllTitleID() {
+    public List<Integer> getAllTitleID() {
         List<Integer> L = new ArrayList<>();
         Set<String> S = pluginConfig.getConfigurationSection("titles").getKeys(false);
         if (!S.isEmpty()) {
@@ -213,31 +208,31 @@ public class Title extends JavaPlugin {
         return L;
     }
 
-    public String GetTitleForTitltID(int id) {
+    public String getTitleForTitltID(int id) {
         if(titleMap.keySet().contains(id)) {
         	return titleMap.get(id);
         }
         return "";
     }
 
-    public List<String> GetLore(int ID) {
-        List<String> L = pluginConfig.getStringList("lore." + ID);
+    public List<String> getLore(int id) {
+        List<String> L = pluginConfig.getStringList("lore." + id);
         for (int i = 0; i < L.size(); i++) {
             L.set(i, L.get(i).replace("&", "§"));
         }
         return L;
     }
 
-    public String GetTitleItemID(int ID) {
-        return pluginConfig.getString("itemid." + ID + ".Material");
+    public String getTitleItemID(int id) {
+        return pluginConfig.getString("itemid." + id + ".Material");
     }
 
-    public int GetTitleItemDataID(int ID) {
-        return pluginConfig.getInt("itemid." + ID + ".Data");
+    public int getTitleItemDataID(int id) {
+        return pluginConfig.getInt("itemid." + id + ".Data");
     }
 
-    public List<String> GetAllTitle() {
-        List<Integer> L = GetAllTitleID();
+    public List<String> getAllTitle() {
+        List<Integer> L = this.getAllTitleID();
         List<String> S = new ArrayList<>();
         for (Integer I : L) {
             S.add(String.valueOf(packId(I.intValue())) + "§r" + pluginConfig.getString("titles." + String.valueOf(I)).replace("&", "§"));
@@ -246,6 +241,7 @@ public class Title extends JavaPlugin {
     }
 
     public void loadTitle() {
+    	titleMap = new HashMap<Integer, String>();
         ConfigurationSection cs = pluginConfig.getConfigurationSection("titles");
         for(String id : cs.getKeys(false)) {
         	try {
@@ -379,11 +375,16 @@ public class Title extends JavaPlugin {
     }
 
     public void setDefaultPrefix(Player player) {
-        String[] g = chatApi.getPlayerGroups(player);
-        if (g == null || g.length < 1) {
-            chatApi.setPlayerPrefix(player, "§f[NotFoundGroup]");
-        } else {
-            setPlayerTitle(player, chatApi.getGroupPrefix((String) null, g[g.length - 1]));
-        }
+        this.setPlayerTitle(player, "&7[&a玩家&7]&e");
+    }
+    
+
+    public static Material valueOf(String str, Material nullValue) {
+    	for(Material m : Material.values()) {
+    		if(m.name().equalsIgnoreCase(str)) {
+    			return m;
+    		}
+    	}
+    	return nullValue;
     }
 }

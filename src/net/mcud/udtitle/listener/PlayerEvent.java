@@ -20,11 +20,11 @@ public class PlayerEvent implements Listener {
     @EventHandler
     public void playerJoin(PlayerJoinEvent event) {
         Player p = event.getPlayer();
-        String prefix = plugin.chatApi.getPlayerPrefix(p).replace("&", "§");
+        String prefix = plugin.data.getPlayerTag(p.getName()).replace("&", "§");
         int id = plugin.extractId(prefix);
         if (id >= 1) {
             if (plugin.hasTitle(p.getName(), id)) {
-                String a = plugin.GetTitleForTitltID(id);
+                String a = plugin.getTitleForTitltID(id);
                 if (!a.equals(prefix)) {
                     plugin.setPlayerTitle(p, a);
                     return;
