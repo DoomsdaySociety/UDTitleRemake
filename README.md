@@ -1,5 +1,5 @@
 # UDTitleRemake
-UDTitle 插件的重制版
+UDTitle 插件的重制版  
 原插件链接: https://www.mcbbs.net/thread-568747-1-1.html
 
 不得不说，我skid它的源码的时候都要气炸了  
