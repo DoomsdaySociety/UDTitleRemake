@@ -36,10 +36,10 @@ public class LanguageManager {
         Lang[] langs = Lang.values();
         Set<String> set = this.config.getConfigurationSection("").getKeys(false);
         for (int i = 0; i < langs.length; i++) {
-            if (!set.contains(langs[i].GetPath())) {
-                this.noFound.add(langs[i].GetPath());
+            if (!set.contains(langs[i].getPath())) {
+                this.noFound.add(langs[i].getPath());
             } else {
-                this.setMsg(langs[i].GetPath(), this.config.getString(langs[i].GetPath().replaceAll("&", "§")));
+                this.setMsg(langs[i].getPath(), this.config.getString(langs[i].getPath().replaceAll("&", "§")));
             }
         }
         if (this.noFound.size() <= 0) {
@@ -56,10 +56,10 @@ public class LanguageManager {
         Lang[] langs = Lang.values();
         Set<String> set = this.config.getConfigurationSection("").getKeys(false);
         for (int i = 0; i < langs.length; i++) {
-            if (!set.contains(langs[i].GetPath())) {
-                this.noFound.add(langs[i].GetPath());
+            if (!set.contains(langs[i].getPath())) {
+                this.noFound.add(langs[i].getPath());
             } else {
-                this.setMsg(langs[i].GetPath(), this.config.getString(langs[i].GetPath().replaceAll("&", "§")));
+                this.setMsg(langs[i].getPath(), this.config.getString(langs[i].getPath().replaceAll("&", "§")));
             }
         }
         if (this.noFound.size() > 0) {
@@ -80,11 +80,11 @@ public class LanguageManager {
     }
 
     public String getMsg(Lang enumlang) {
-        return this.get(enumlang.GetPath());
+        return this.get(enumlang.getPath());
     }
 
     public void setMsg(Lang enumlang, String msg) {
-        this.msgMap.put(enumlang.GetPath(), msg);
+        this.msgMap.put(enumlang.getPath(), msg);
     }
 
     public void setMsg(String path, String msg) {

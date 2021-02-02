@@ -36,16 +36,16 @@ public class PlayerEvent implements Listener {
     }
 
     @EventHandler
-    public void onInventoryClick(InventoryClickEvent e) {
-        Player p = (Player) e.getWhoClicked();
-        InventoryView inventory = e.getView();
-        if (e.getCurrentItem() != null && e.getCurrentItem().getType() != Material.AIR) {
+    public void onInventoryClick(InventoryClickEvent event) {
+        Player p = (Player) event.getWhoClicked();
+        InventoryView inventory = event.getView();
+        if (event.getCurrentItem() != null && event.getCurrentItem().getType() != Material.AIR) {
             String iname = inventory.getTitle();
             if (iname.indexOf(plugin.titleGuiTitle) == 0) {
-                e.setCancelled(true);
+                event.setCancelled(true);
                 int index = plugin.extractId(iname.substring(plugin.titleGuiTitle.length(), iname.length()));
-                e.getCurrentItem().getItemMeta().hasDisplayName();
-                String name = e.getCurrentItem().getItemMeta().getDisplayName();
+                event.getCurrentItem().getItemMeta().hasDisplayName();
+                String name = event.getCurrentItem().getItemMeta().getDisplayName();
                 if (name.equals(GuiTitle.prevPage)) {
                     p.closeInventory();
                     p.updateInventory();
@@ -59,20 +59,20 @@ public class PlayerEvent implements Listener {
                     p.closeInventory();
                     plugin.getGuiTitle().open(p, index);
                 } else if (plugin.extractId(name) < 1) {
-                    p.sendMessage(plugin.msgManager.getMsg(Lang.InvalidTitle));
+                    p.sendMessage(plugin.msgManager.getMsg(Lang.INVALIDTITLE));
                     p.closeInventory();
                 } else {
                     if (!plugin.hasTitle(p.getName(), plugin.extractId(name))) {
-                        p.sendMessage(plugin.msgManager.getMsg(Lang.nohava));
+                        p.sendMessage(plugin.msgManager.getMsg(Lang.NOHAVA));
                     } else if (plugin.cost <= 0.0d) {
                         plugin.setPlayerTitle(p, plugin.extractId(name));
                     } else if (!plugin.setPlayerTitleUseMoney(p, plugin.extractId(name))) {
-                        p.sendMessage(plugin.msgManager.getMsg(Lang.NotEnoughMoney));
+                        p.sendMessage(plugin.msgManager.getMsg(Lang.NOTENOUGHMONEY));
                         return;
                     } else {
-                        p.sendMessage(plugin.msgManager.getMsg(Lang.ExpendMoney).replace("%1", new StringBuilder(String.valueOf(plugin.cost)).toString()));
+                        p.sendMessage(plugin.msgManager.getMsg(Lang.EXPENDMONEY).replace("%1", new StringBuilder(String.valueOf(plugin.cost)).toString()));
                     }
-                    p.sendMessage(plugin.msgManager.getMsg(Lang.change));
+                    p.sendMessage(plugin.msgManager.getMsg(Lang.CHANGE));
                     p.closeInventory();
                     p.updateInventory();
                     plugin.getGuiTitle().open(p, index);
@@ -105,18 +105,18 @@ public class PlayerEvent implements Listener {
                     p.closeInventory();
                     plugin.getGuiList().open(p, index);
                 } else if (plugin.extractId(name) < 1) {
-                    p.sendMessage(plugin.msgManager.getMsg(Lang.InvalidTitle));
+                    p.sendMessage(plugin.msgManager.getMsg(Lang.INVALIDTITLE));
                     p.closeInventory();
                 } else {
                     if (!plugin.hasTitle(p.getName(), plugin.extractId(name))) {
-                        p.sendMessage(plugin.msgManager.getMsg(Lang.nohava));
+                        p.sendMessage(plugin.msgManager.getMsg(Lang.NOHAVA));
                     } else if (plugin.cost <= 0.0d) {
                         plugin.setPlayerTitle(p, plugin.extractId(name));
                     } else if (!plugin.setPlayerTitleUseMoney(p, plugin.extractId(name))) {
-                        p.sendMessage(plugin.msgManager.getMsg(Lang.NotEnoughMoney));
+                        p.sendMessage(plugin.msgManager.getMsg(Lang.NOTENOUGHMONEY));
                         return;
                     } else {
-                        p.sendMessage(plugin.msgManager.getMsg(Lang.ExpendMoney).replace("%1", new StringBuilder(String.valueOf(plugin.cost)).toString()));
+                        p.sendMessage(plugin.msgManager.getMsg(Lang.EXPENDMONEY).replace("%1", new StringBuilder(String.valueOf(plugin.cost)).toString()));
                     }
                     p.closeInventory();
                     p.updateInventory();

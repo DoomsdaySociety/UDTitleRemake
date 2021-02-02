@@ -15,93 +15,93 @@ public class TGui implements CommandExecutor {
 		this.plugin = plugin;
 	}
 	
-    public boolean onCommand(CommandSender arg0, Command arg1, String arg2, String[] s) {
+    public boolean onCommand(CommandSender sender, Command arg1, String label, String[] args) {
         Player p = null;
         
-        if (arg0 instanceof Player) {
-            p = (Player) arg0;
+        if (sender instanceof Player) {
+            p = (Player) sender;
         }
-        if (s.length == 0) {
+        if (args.length == 0) {
             if (!plugin.isUseGui) {
-                arg0.sendMessage(plugin.msgManager.getMsg(Lang.CanNotOpenGui));
+                sender.sendMessage(plugin.msgManager.getMsg(Lang.CANNOTOPENGUI));
                 return true;
             }
             plugin.getGuiTitle().open(p, 1);
-        } else if (s.length == 1) {
-        	if(s[0].equalsIgnoreCase("help")) {
-                arg0.sendMessage(plugin.msgManager.getMsg(Lang.help1));
-                arg0.sendMessage(plugin.msgManager.getMsg(Lang.help2));
-                arg0.sendMessage(plugin.msgManager.getMsg(Lang.help3));
+        } else if (args.length == 1) {
+        	if(args[0].equalsIgnoreCase("help")) {
+                sender.sendMessage(plugin.msgManager.getMsg(Lang.HELP1));
+                sender.sendMessage(plugin.msgManager.getMsg(Lang.HELP2));
+                sender.sendMessage(plugin.msgManager.getMsg(Lang.HELP3));
         	}
-        	else if (s[0].equalsIgnoreCase("open")) {
+        	else if (args[0].equalsIgnoreCase("open")) {
                 if (!plugin.isUseGui) {
-                    arg0.sendMessage(plugin.msgManager.getMsg(Lang.CanNotOpenGui));
+                    sender.sendMessage(plugin.msgManager.getMsg(Lang.CANNOTOPENGUI));
                     return true;
                 }
                 plugin.getGuiTitle().open(p, 1);
-            } else if (s[0].equalsIgnoreCase("list")) {
-                if (arg0 instanceof Player) {
+            } else if (args[0].equalsIgnoreCase("list")) {
+                if (sender instanceof Player) {
                 	plugin.getGuiList().open(p, 1);
                     return true;
                 }
-                arg0.sendMessage(plugin.msgManager.getMsg(Lang.List1));
+                sender.sendMessage(plugin.msgManager.getMsg(Lang.LIST1));
                 
                 for(Integer id : plugin.titleMap.keySet()) {
-                    arg0.sendMessage("§4" + id + "§b:---:" + plugin.titleMap.get(id));
+                    sender.sendMessage("§4" + id + "§b:---:" + plugin.titleMap.get(id));
                 }
-                arg0.sendMessage(plugin.msgManager.getMsg(Lang.List2));
-            } else if (s[0].equalsIgnoreCase("reload")) {
+                sender.sendMessage(plugin.msgManager.getMsg(Lang.LIST2));
+            } else if (args[0].equalsIgnoreCase("reload")) {
                 plugin.reload();
-                arg0.sendMessage(plugin.msgManager.getMsg(Lang.ReloadSuccess));
+                sender.sendMessage(plugin.msgManager.getMsg(Lang.RELOADSUCCESS));
             }
-        } else if (s.length == 2) {
-            if (s[0].equalsIgnoreCase("list")) {
-                List<Integer> I = plugin.getPlayerAllTitleID(s[1]);
-                List<String> LS = plugin.getPlayerAllTitle(s[1]);
-                arg0.sendMessage("§2--------§b[§6" + s[1] + "的称号" + "§b]§2-------");
+        } else if (args.length == 2) {
+            if (args[0].equalsIgnoreCase("list")) {
+                List<Integer> I = plugin.getPlayerAllTitleID(args[1]);
+                List<String> LS = plugin.getPlayerAllTitle(args[1]);
+                sender.sendMessage("§2--------§b[§6" + args[1] + "的称号" + "§b]§2-------");
                 for (int o = 0; o < I.size(); o++) {
-                    arg0.sendMessage("§4" + I.get(o) + "§b:---:" + LS.get(o));
+                    sender.sendMessage("§4" + I.get(o) + "§b:---:" + LS.get(o));
                 }
-                arg0.sendMessage("§2--------§b[玩家称号列表]§2-------");
+                sender.sendMessage("§2--------§b[玩家称号列表]§2-------");
             }
-        } else if (s.length == 3) {
-            if (!arg0.hasPermission("udtitle.admin") && !(arg0 instanceof ConsoleCommandSender)) {
+        } else if (args.length == 3) {
+            if (!sender.hasPermission("udtitle.admin") && !(sender instanceof ConsoleCommandSender)) {
                 return false;
             }
-            if (s[0].equalsIgnoreCase("padd")) {
-                if (!arg0.hasPermission("udtitle.admin")) {
+            if (args[0].equalsIgnoreCase("padd")) {
+                if (!sender.hasPermission("udtitle.admin")) {
                     return false;
                 }
-                if (plugin.addPlayerTitle(s[1], Integer.valueOf(s[2]).intValue())) {
-                    arg0.sendMessage("§a添加成功");
+                if (plugin.addPlayerTitle(args[1], Integer.valueOf(args[2]).intValue())) {
+                    sender.sendMessage("§a添加成功");
                 } else {
-                    arg0.sendMessage("§c添加失败");
+                    sender.sendMessage("§c添加失败");
                 }
-            } else if (s[0].equalsIgnoreCase("prm")) {
-                if (!arg0.hasPermission("udtitle.admin")) {
+            } else if (args[0].equalsIgnoreCase("prm")) {
+                if (!sender.hasPermission("udtitle.admin")) {
                     return false;
                 }
-                if (plugin.removePlayerTitle(p.getName(), Integer.valueOf(s[2]).intValue())) {
-                    arg0.sendMessage("§a删除成功");
+                if (plugin.removePlayerTitle(p.getName(), Integer.valueOf(args[2]).intValue())) {
+                    sender.sendMessage("§a删除成功");
                 } else {
-                    arg0.sendMessage("§c删除失败");
+                    sender.sendMessage("§c删除失败");
                 }
-            } else if (s[0].equalsIgnoreCase("pset")) {
-                if (arg0 instanceof Player) {
-                    if (arg0.getName().equalsIgnoreCase(s[1])) {
-                        if (!plugin.isTitleExist(Integer.valueOf(s[2]).intValue()).booleanValue()) {
-                            arg0.sendMessage("§6称号不存在");
+            } else if (args[0].equalsIgnoreCase("pset")) {
+                if (sender instanceof Player) {
+                    if (sender.getName().equalsIgnoreCase(args[1])) {
+                        if (!plugin.isTitleExist(Integer.valueOf(args[2]).intValue()).booleanValue()) {
+                            sender.sendMessage("§6称号不存在");
                             return true;
-                        } else if (!plugin.setPlayerTitleUseMoney(p, Integer.valueOf(s[2]).intValue())) {
-                            arg0.sendMessage("§6您的游戏币不足QAQ.无法更换称号");
+                        } else if (!plugin.setPlayerTitleUseMoney(p, Integer.valueOf(args[2]).intValue())) {
+                            sender.sendMessage("§6您的游戏币不足QAQ.无法更换称号");
                         } else {
-                            arg0.sendMessage("§b已设置");
+                            sender.sendMessage("§b已设置");
                         }
-                    } else if (arg0.hasPermission("udtitle.admin")) {
-                        plugin.setPlayerTitle(s[1], Integer.valueOf(s[2]).intValue());
-                        arg0.sendMessage("§b已设置");
+                    } else if (sender.hasPermission("udtitle.admin")) {
+                        plugin.setPlayerTitle(args[1], Integer.valueOf(args[2]).intValue());
+                        sender.sendMessage("§b已设置");
                     } else {
-                        arg0.sendMessage("§c你没有权限设置其他人的称号");
+                        sender.sendMessage("§c你没有权限设置其他人的称号");
                     }
                 }
             }

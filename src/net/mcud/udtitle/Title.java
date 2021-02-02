@@ -82,13 +82,13 @@ public class Title extends JavaPlugin {
             pluginConfig = YamlConfiguration.loadConfiguration(configFile);
         }
         if (pluginConfig == null) {
-            info(this.msgManager.getMsg(Lang.LoadFail));
+            info(this.msgManager.getMsg(Lang.LOADFAIL));
         }
-        GuiTitle.prevPage = packId(-233) + this.msgManager.getMsg(Lang.LastPage);
-        GuiTitle.nextPage = packId(-233) + this.msgManager.getMsg(Lang.NextPage);
-        GuiTitle.cancelTag = packId(-233) + this.msgManager.getMsg(Lang.CancelTitle);
-        ListGui.prevPage = packId(-233) + this.msgManager.getMsg(Lang.LastPage);
-        ListGui.nextPage = packId(-233) + this.msgManager.getMsg(Lang.NextPage);
+        GuiTitle.prevPage = packId(-233) + this.msgManager.getMsg(Lang.LASTPAGE);
+        GuiTitle.nextPage = packId(-233) + this.msgManager.getMsg(Lang.NEXTPAGE);
+        GuiTitle.cancelTag = packId(-233) + this.msgManager.getMsg(Lang.CANCELTITLE);
+        ListGui.prevPage = packId(-233) + this.msgManager.getMsg(Lang.LASTPAGE);
+        ListGui.nextPage = packId(-233) + this.msgManager.getMsg(Lang.NEXTPAGE);
         titleGuiTitle = pluginConfig.getString("title");
         if ((titleGuiTitle == null) || (titleGuiTitle.length() < 1)) {
             titleGuiTitle = "&b称号列表";
@@ -253,17 +253,16 @@ public class Title extends JavaPlugin {
         		continue;
         	}
         }
-    	
     }
 
-    public boolean addPlayerTitle(String Player, int ID) {
+    public boolean addPlayerTitle(String player, int id) {
         if (storageType != 0) {
-            return permsApi.playerAdd((String) null, Player, "udtitle.t." + String.valueOf(ID));
+            return permsApi.playerAdd((String) null, player, "udtitle.t." + String.valueOf(id));
         }
-        List<Integer> L = pluginConfig.getIntegerList("players." + Player.toLowerCase());
-        if (!L.contains(Integer.valueOf(ID)) && isTitleExist(ID).booleanValue()) {
-            L.add(Integer.valueOf(ID));
-            pluginConfig.set("players." + Player.toLowerCase(), L);
+        List<Integer> L = pluginConfig.getIntegerList("players." + player.toLowerCase());
+        if (!L.contains(Integer.valueOf(id)) && isTitleExist(id).booleanValue()) {
+            L.add(Integer.valueOf(id));
+            pluginConfig.set("players." + player.toLowerCase(), L);
         }
         try {
             pluginConfig.save(configFile);
@@ -274,18 +273,18 @@ public class Title extends JavaPlugin {
         }
     }
 
-    public boolean removePlayerTitle(String Player, int ID) {
+    public boolean removePlayerTitle(String player, int id) {
         if (storageType != 0) {
-            return permsApi.playerRemove((String) null, Player, "udtitle.t." + String.valueOf(ID));
+            return permsApi.playerRemove((String) null, player, "udtitle.t." + String.valueOf(id));
         }
-        List<Integer> L = pluginConfig.getIntegerList("players." + Player);
+        List<Integer> L = pluginConfig.getIntegerList("players." + player);
         for (int i = 0; i < L.size(); i++) {
-            if (L.get(i).intValue() == ID) {
+            if (L.get(i).intValue() == id) {
                 L.remove(i);
                 return true;
             }
         }
-        pluginConfig.set("players." + Player, L);
+        pluginConfig.set("players." + player, L);
         try {
             pluginConfig.save(configFile);
             return true;
@@ -323,46 +322,47 @@ public class Title extends JavaPlugin {
         return id;
     }
 
-    public boolean hasTitle(String Player, int ID) {
+    public boolean hasTitle(String player, int id) {
         if (storageType != 0) {
-            return permsApi.has("", Player, "udtitle.t." + String.valueOf(ID));
+            return permsApi.has("", player, "udtitle.t." + String.valueOf(id));
         }
-        if (!permsApi.has("", Player, "udtitle.t.*") && !pluginConfig.getIntegerList("players." + Player.toLowerCase()).contains(Integer.valueOf(ID))) {
+        if (!permsApi.has("", player, "udtitle.t.*") && !pluginConfig.getIntegerList("players." + player.toLowerCase()).contains(Integer.valueOf(id))) {
             return false;
         }
         return true;
     }
 
-    public void setPlayerTitle(Player Player, String Prefix) {
-        setPlayerTitle(Player.getName(), Prefix);
+    public void setPlayerTitle(Player player, String prefix) {
+        setPlayerTitle(player.getName(), prefix);
     }
 
-    public boolean setPlayerTitle(String Player, String Prefix) {
-        data.setPlayerTag(Player,Prefix);
+    public boolean setPlayerTitle(String player, String prefix) {
+        data.setPlayerTag(player, prefix);
+        data.saveConfiguration();
         if (isUseCommand) {
-            return Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd.replace("%player%", Player).replace("%prefix%", Prefix).replace("§", "&"));
+            return Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd.replace("%player%", player).replace("%prefix%", prefix).replace("§", "&"));
         }
         return true;
     }
 
-    public boolean setPlayerTitle(Player Player, int ID) {
-        return setPlayerTitle(Player.getName(), ID);
+    public boolean setPlayerTitle(Player player, int id) {
+        return setPlayerTitle(player.getName(), id);
     }
 
-	public boolean setPlayerTitleUseMoney(Player Player, int ID) {
-        if (econApi.getBalance(Player.getName()) < cost || !takeMoney(Player.getName(), cost)) {
+	public boolean setPlayerTitleUseMoney(Player player, int id) {
+        if (econApi.getBalance(player.getName()) < cost || !takeMoney(player.getName(), cost)) {
             return false;
         }
-        if (setPlayerTitle(Player, ID)) {
+        if (setPlayerTitle(player, id)) {
             return true;
         }
-        econApi.depositPlayer(Player.getName(), cost);
-        Player.sendMessage(msgManager.getMsg(Lang.NotEnoughMoney));
+        econApi.depositPlayer(player.getName(), cost);
+        player.sendMessage(msgManager.getMsg(Lang.NOTENOUGHMONEY));
         return false;
     }
 
-    public boolean takeMoney(String Player, double db) {
-        return econApi.withdrawPlayer(Player, db).transactionSuccess();
+    public boolean takeMoney(String player, double db) {
+        return econApi.withdrawPlayer(player, db).transactionSuccess();
     }
 
     public boolean setPlayerTitle(String player, int id) {

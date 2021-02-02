@@ -57,9 +57,9 @@ public class ListGui {
                 ItemMeta IM = IS.getItemMeta();
                 List<String> Lore = plugin.getLore(listAllTitleID.get(tid).intValue());
                 if (plugin.hasTitle(player.getName(), tid)) {
-                    Lore.add(0, plugin.msgManager.getMsg(Lang.hava));
+                    Lore.add(0, plugin.msgManager.getMsg(Lang.HAVA));
                 } else {
-                    Lore.add(0, plugin.msgManager.getMsg(Lang.nohava));
+                    Lore.add(0, plugin.msgManager.getMsg(Lang.NOHAVA));
                 }
                 IM.setLore(Lore);
                 IM.setDisplayName(String.valueOf(plugin.packId(listAllTitleID.get(tid).intValue())) + "§r" + listAllTitle.get(tid).replace("&", "§"));
